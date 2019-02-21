@@ -3,7 +3,7 @@ import Guard from './Guard';
 
 const regexEndLine = /^(.*)\r\n|\n|\r/gm;
 
-export type DOMObject = dom.ModuleMember | dom.EnumDeclaration | dom.PropertyDeclaration;
+export type DOMObject = dom.ModuleMember | dom.EnumDeclaration | dom.PropertyDeclaration | dom.MethodDeclaration;
 export type DOMObjectWithParent<T extends DOMObject> = T & { _parent: DOMObject };
 
 export class Parser {
