@@ -7,8 +7,8 @@ type DOMObject = dom.ModuleMember | dom.EnumDeclaration | dom.PropertyDeclaratio
 
 export class Parser {
     topLevel: Array<dom.TopLevelDeclaration> = [];
-    objects: Record<string, DOMObject> = {};
-    namespaces: Record<string, dom.NamespaceDeclaration> = {};
+    objects: { [key: string]: DOMObject } = {};
+    namespaces: { [key: string]: dom.NamespaceDeclaration } = {};
 
     constructor(doclets: Array<TDoclet>) {
         // TODO remove once stable
