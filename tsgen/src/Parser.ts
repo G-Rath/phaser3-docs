@@ -507,7 +507,7 @@ export class Parser {
                     if (paramDoc.description) {
                         obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
                     } else if (defaultVal.length) {
-                        obj.jsDocComment += `\n@param ${paramDoc.name} ` + defaultVal;
+                        obj.jsDocComment += `\n@param ${paramDoc.name} ${defaultVal}`;
                     }
 
                     continue;
@@ -531,7 +531,7 @@ export class Parser {
                 if (paramDoc.description) {
                     obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
                 } else if (defaultVal.length) {
-                    obj.jsDocComment += `\n@param ${paramDoc.name} ` + defaultVal;
+                    obj.jsDocComment += `\n@param ${paramDoc.name} ${defaultVal}`;
                 }
             }
         }
