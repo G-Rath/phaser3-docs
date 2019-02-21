@@ -397,7 +397,6 @@ export class Parser {
     }
 
     private _createTypedefDeclaration(doclet: ITypedefDoclet): dom.TypeAliasDeclaration {
-        const typeName = doclet.type.names[0];
         let type = null;
 
         // TODO: this doesn't support 'Object', which is typically what should be used.
