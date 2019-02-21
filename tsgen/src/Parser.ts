@@ -103,12 +103,17 @@ export class Parser {
                     doclet.kind = 'mixin';
                     break;
             }
-            if (doclet.longname == 'ModelViewProjection') doclet.kind = 'mixin';
-            if ((doclet.longname.indexOf('Phaser.Physics.Arcade.Components.') == 0
+            if (doclet.longname == 'ModelViewProjection') {
+                doclet.kind = 'mixin';
+            }
+            if (
+                (doclet.longname.indexOf('Phaser.Physics.Arcade.Components.') == 0
                  || doclet.longname.indexOf('Phaser.Physics.Impact.Components.') == 0
                  || doclet.longname.indexOf('Phaser.Physics.Matter.Components.') == 0)
-                && doclet.longname.indexOf('#') == -1)
+                && doclet.longname.indexOf('#') == -1
+            ) {
                 doclet.kind = 'mixin';
+            }
             /////////////////////////
 
             let obj: dom.DeclarationBase;
@@ -216,12 +221,16 @@ export class Parser {
 
                 // class/interface members have methods, not functions
                 if (((parent as any).kind === 'class' || (parent as any).kind === 'interface')
-                    && (obj as any).kind === 'function')
+                    && (obj as any).kind === 'function') {
                     (obj as any).kind = 'method';
+                }
                 // namespace members are vars or consts, not properties
                 if ((parent as any).kind === 'namespace' && (obj as any).kind === 'property') {
-                    if (doclet.kind == 'constant') (obj as any).kind = 'const';
-                    else (obj as any).kind = 'var';
+                    if (doclet.kind == 'constant') {
+                        (obj as any).kind = 'const';
+                    } else {
+                        (obj as any).kind = 'var';
+                    }
                 }
             }
         }
@@ -237,12 +246,15 @@ export class Parser {
 
                 continue;
             }
-            if (!(<any>obj)._parent) continue;
+            if (!(<any>obj)._parent) {
+                continue;
+            }
 
             if (doclet.inherited) {// remove inherited members if they aren't from an interface
                 const from = this.objects[doclet.inherits];
-                if (!from || !(<any>from)._parent)
+                if (!from || !(<any>from)._parent) {
                     throw `'${doclet.longname}' should inherit from '${doclet.inherits}', which is not defined.`;
+                }
 
                 if ((<any>from)._parent.kind != 'interface') {
                     (<any>obj)._parent.members.splice((<any>obj)._parent.members.indexOf(obj), 1);
@@ -255,7 +267,10 @@ export class Parser {
     private _resolveParents(doclets: Array<TDoclet>): void {
         for (const doclet of doclets) {
             const obj = this.objects[doclet.longname];
-            if (!obj || doclet.kind !== 'class') continue;
+
+            if (!obj || doclet.kind !== 'class') {
+                continue;
+            }
 
             const o = obj as dom.ClassDeclaration;
 
@@ -323,8 +338,9 @@ export class Parser {
 
         this._processGeneric(doclet, obj, params);
 
-        if (doclet.classdesc)
-            doclet.description = doclet.classdesc.replace(regexEndLine, '$1\n'); // make sure docs will be added
+        if (doclet.classdesc) {
+            doclet.description = doclet.classdesc.replace(regexEndLine, '$1\n');
+        } // make sure docs will be added
 
         return obj;
     }
@@ -406,8 +422,9 @@ export class Parser {
             for (const propDoc of doclet.properties) {
                 const prop = this._createPropertyDeclaration(propDoc);
                 properties.push(prop);
-                if (propDoc.description)
+                if (propDoc.description) {
                     prop.jsDocComment = propDoc.description.replace(regexEndLine, '$1\n');
+                }
             }
 
             type = dom.create.objectType(properties);
@@ -445,22 +462,22 @@ export class Parser {
         const parameters: dom.Parameter[] = [];
 
         if (doclet.params) {
-
             let optional = false;
 
             obj.jsDocComment = '';
 
             for (const paramDoc of doclet.params) {
-
                 // TODO REMOVE TEMP FIX
                 if (paramDoc.name.indexOf('.') != -1) {
                     console.log(`Warning: ignoring param with '.' for '${doclet.longname}' in ${doclet.meta.filename}@${doclet.meta.lineno}`);
 
                     const defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
-                    if (paramDoc.description)
+                    if (paramDoc.description) {
                         obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
-                    else if (defaultVal.length)
+                    } else if (defaultVal.length) {
                         obj.jsDocComment += `\n@param ${paramDoc.name} ` + defaultVal;
+                    }
+
                     continue;
                 }
                 ///////////////////////
@@ -479,10 +496,11 @@ export class Parser {
 
                 const defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
 
-                if (paramDoc.description)
+                if (paramDoc.description) {
                     obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
-                else if (defaultVal.length)
+                } else if (defaultVal.length) {
                     obj.jsDocComment += `\n@param ${paramDoc.name} ` + defaultVal;
+                }
             }
         }
 
@@ -734,7 +752,7 @@ export class Parser {
             | dom.TypeAliasDeclaration,
         parameters: dom.Parameter[]
     ): void {
-        if (doclet.tags)
+        if (doclet.tags) {
             for (const tag of doclet.tags) {
                 if (tag.originalTitle === 'generic') {
                     const matches = tag.value.match(/(?:(?:{)([^}]+)(?:}))?\s?([^\s]+)(?:\s?-\s?(?:\[)(.+)(?:\]))?/);
@@ -752,6 +770,7 @@ export class Parser {
                     handleOverrides(matches[2], this._processTypeName(overrideType));
                 }
             }
+        }
 
         function handleOverrides(matchedString: string, overrideType: string) {
             if (matchedString != null) {
