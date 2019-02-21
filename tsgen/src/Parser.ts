@@ -195,20 +195,23 @@ export class Parser {
             //TODO: this whole section should be removed once stable
             if (!parent) {
                 console.log(`${doclet.longname} in ${doclet.meta.filename}@${doclet.meta.lineno} has parent '${doclet.memberof}' that is not defined.`);
-                const parts: string[] = doclet.memberof.split('.');
+                const parts = doclet.memberof.split('.');
                 const newParts = [parts.pop()];
+
                 while (parts.length > 0 && this.objects[parts.join('.')] == null) newParts.unshift(parts.pop());
-                parent = this.objects[parts.join('.')] as dom.NamespaceDeclaration;
+
+                parent = this.objects[parts.join('.')];
                 if (parent == null) {
                     parent = dom.create.namespace(doclet.memberof);
-                    this.namespaces[doclet.memberof] = <dom.NamespaceDeclaration>parent;
-                    this.topLevel.push(<dom.NamespaceDeclaration>parent);
+
+                    this.namespaces[doclet.memberof] = parent;
+                    this.topLevel.push(parent);
                 } else {
                     while (newParts.length > 0) {
                         const oldParent = <dom.NamespaceDeclaration>parent;
                         parent = dom.create.namespace(newParts.shift());
-                        parts.push((<dom.NamespaceDeclaration>parent).name);
-                        this.namespaces[parts.join('.')] = <dom.NamespaceDeclaration>parent;
+                        parts.push(parent.name);
+                        this.namespaces[parts.join('.')] = parent;
                         oldParent.members.push(<dom.NamespaceDeclaration>parent);
                         (<any>parent)._parent = oldParent;
                     }
