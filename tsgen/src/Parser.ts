@@ -240,9 +240,22 @@ export class Parser {
         }
     }
 
+    /**
+     * Resolves the inheritance of the given `doclet`s.
+     *
+     * In TypeScript, we can't redeclare members that already exist on the type,
+     * even if they're declared by the parent, so they have to be removed from
+     * everything but the original declaring interface.
+     *
+     * @param {Array<TDoclet>} doclets
+     * @private
+     */
     private _resolveInheritance(doclets: Array<TDoclet>): void {
         for (const doclet of doclets) {
-            const obj = doclet.kind === 'namespace' ? this.namespaces[doclet.longname] : this.objects[doclet.longname];
+            const obj = doclet.kind === 'namespace'
+                ? this.namespaces[doclet.longname]
+                : this.objects[doclet.longname];
+
             if (!obj) {
 
                 //  TODO
@@ -256,14 +269,24 @@ export class Parser {
             }
 
             if (doclet.inherited) {// remove inherited members if they aren't from an interface
+                if (obj._parent.kind !== 'class'
+                    && obj._parent.kind !== 'enum'
+                    && obj._parent.kind !== 'interface'
+                    && obj._parent.kind !== 'namespace'
+                ) {
+                    throw new Error(`"${obj.kind}" cannot not inherit from parent of kind "${obj._parent.kind}"`);
+                }
+
                 const from = this.objects[doclet.inherits];
                 if (!from || !Guard.dom.hasParent(from)) {
                     throw `'${doclet.longname}' should inherit from '${doclet.inherits}', which is not defined.`;
                 }
 
-                if ((<any>from)._parent.kind != 'interface') {
-                    (<any>obj)._parent.members.splice((<any>obj)._parent.members.indexOf(obj), 1);
-                    (<any>obj)._parent = null;
+                if (from._parent.kind !== 'interface') {
+                    const index = (obj._parent.members as Array<DOMObject>).indexOf(obj);
+
+                    obj._parent.members.splice(index, 1);
+                    obj._parent = null;
                 }
             }
         }
