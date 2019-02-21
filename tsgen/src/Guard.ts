@@ -1,4 +1,5 @@
 import * as dom from 'dts-dom';
+import { DOMObject, DOMObjectWithParent } from './Parser';
 
 export default class Guard {
     /**
@@ -74,6 +75,17 @@ export default class Guard {
                 return typeof type === 'object' && type.kind === 'type-parameter';
             }
         };
+
+        /**
+         * Guards that the given CodeDOM `element` has a `_parent` property.
+         *
+         * @param {T} element
+         *
+         * @return {doclet is T & {_parent: DOMObject}}
+         */
+        static hasParent<T extends DOMObject>(element: T): element is DOMObjectWithParent<T> {
+            return typeof element === 'object' && '_parent' in element;
+        }
 
         /**
          * Guards that the given `element` is of type `dom.Parameter`.

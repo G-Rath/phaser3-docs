@@ -3,7 +3,8 @@ import Guard from './Guard';
 
 const regexEndLine = /^(.*)\r\n|\n|\r/gm;
 
-type DOMObject = dom.ModuleMember | dom.EnumDeclaration | dom.PropertyDeclaration;
+export type DOMObject = dom.ModuleMember | dom.EnumDeclaration | dom.PropertyDeclaration;
+export type DOMObjectWithParent<T extends DOMObject> = T & { _parent: DOMObject };
 
 export class Parser {
     topLevel: Array<dom.TopLevelDeclaration> = [];
@@ -226,7 +227,7 @@ export class Parser {
                 console.log(parent);
             }
 
-            (<any>obj)._parent = parent;
+            (obj as DOMObjectWithParent<typeof obj>)._parent = parent;
 
             // class/interface members have methods, not functions
             if ((parent.kind === 'class' || (parent as any).kind === 'interface')
@@ -254,13 +255,14 @@ export class Parser {
 
                 continue;
             }
-            if (!(<any>obj)._parent) {
+
+            if (!Guard.dom.hasParent(obj)) {
                 continue;
             }
 
             if (doclet.inherited) {// remove inherited members if they aren't from an interface
                 const from = this.objects[doclet.inherits];
-                if (!from || !(<any>from)._parent) {
+                if (!from || !Guard.dom.hasParent(from)) {
                     throw `'${doclet.longname}' should inherit from '${doclet.inherits}', which is not defined.`;
                 }
 
