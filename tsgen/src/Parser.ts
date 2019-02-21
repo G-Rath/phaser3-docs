@@ -150,17 +150,23 @@ export class Parser {
                     break;
             }
 
-            if (obj) {
-                if (container[doclet.longname]) {
-                    console.log('Warning: ignoring duplicate doc name: ' + doclet.longname);
-                    doclets.splice(i--, 1);
-                    continue;
-                }
-                container[doclet.longname] = obj;
-                if (doclet.description) {
-                    const otherDocs = obj.jsDocComment || '';
-                    obj.jsDocComment = doclet.description.replace(regexEndLine, '$1\n') + otherDocs;
-                }
+            if (!obj) {
+                continue;
+            }
+
+            if (container[doclet.longname]) {
+                console.log('Warning: ignoring duplicate doc name: ' + doclet.longname);
+                doclets.splice(i--, 1);
+
+                continue;
+            }
+
+            container[doclet.longname] = obj;
+
+            if (doclet.description) {
+                const otherDocs = obj.jsDocComment || '';
+
+                obj.jsDocComment = doclet.description.replace(regexEndLine, '$1\n') + otherDocs;
             }
         }
     }
