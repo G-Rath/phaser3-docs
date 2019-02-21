@@ -168,7 +168,6 @@ export class Parser {
     }
 
     private _resolveDoclets(doclets: Array<TDoclet>): void {
-        const allTypes = new Set<string>();
         for (const doclet of doclets) {
             const obj = doclet.kind === 'namespace' ? this.namespaces[doclet.longname] : this.objects[doclet.longname];
 
