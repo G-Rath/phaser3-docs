@@ -100,12 +100,11 @@ export class Parser {
                 case 'Phaser.GameObjects.Components.ToJSON':
                 case 'Phaser.GameObjects.Components.Transform':
                 case 'Phaser.GameObjects.Components.Visible':
+                case 'ModelViewProjection':
                     doclet.kind = 'mixin';
                     break;
             }
-            if (doclet.longname == 'ModelViewProjection') {
-                doclet.kind = 'mixin';
-            }
+
             if (
                 (doclet.longname.indexOf('Phaser.Physics.Arcade.Components.') == 0
                  || doclet.longname.indexOf('Phaser.Physics.Impact.Components.') == 0
