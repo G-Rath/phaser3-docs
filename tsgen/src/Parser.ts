@@ -13,18 +13,17 @@ export class Parser {
 
     constructor(doclets: Array<TDoclet>) {
         // TODO remove once stable
-        for (let i = 0; i < doclets.length; i++) {
-            const doclet = doclets[i];
-
+        doclets.forEach(doclet => {
             if (doclet.longname && doclet.longname.indexOf('{') === 0) {
                 doclet.longname = doclet.longname.substr(1);
                 console.log(`Warning: had to fix wrong name for ${doclet.longname} in ${doclet.meta.filename}@${doclet.meta.lineno}`);
             }
+
             if (doclet.memberof && doclet.memberof.indexOf('{') === 0) {
                 doclet.memberof = doclet.memberof.substr(1);
                 console.log(`Warning: had to fix wrong name for ${doclet.longname} in ${doclet.meta.filename}@${doclet.meta.lineno}`);
             }
-        }
+        });
         //////////////////////////
 
         this.topLevel = [];
