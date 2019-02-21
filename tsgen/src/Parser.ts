@@ -313,13 +313,17 @@ export class Parser {
 
                     if (!baseType) {
                         console.log(`ERROR: Did not find base type: ${augment} for ${doclet.longname}`);
-                    } else {
-                        if (baseType.kind == 'class') {
-                            o.baseType = dom.create.class(name);
-                        } else {
-                            o.implements.push(dom.create.interface(name));
-                        }
+
+                        continue;
                     }
+
+                    if (baseType.kind == 'class') {
+                        o.baseType = dom.create.class(name);
+
+                        continue;
+                    }
+
+                    o.implements.push(dom.create.interface(name));
                 }
             }
         }
