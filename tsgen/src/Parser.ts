@@ -230,17 +230,12 @@ export class Parser {
             (obj as DOMObjectWithParent<typeof obj>)._parent = parent;
 
             // class/interface members have methods, not functions
-            if ((parent.kind === 'class' || (parent as any).kind === 'interface')
-                && (obj as any).kind === 'function') {
-                (obj as any).kind = 'method';
+            if ((parent.kind === 'class' || parent.kind === 'interface') && (obj as DOMObject).kind === 'function') {
+                obj.kind = 'method';
             }
             // namespace members are vars or consts, not properties
-            if ((parent as any).kind === 'namespace' && (obj as any).kind === 'property') {
-                if (doclet.kind == 'constant') {
-                    (obj as any).kind = 'const';
-                } else {
-                    (obj as any).kind = 'var';
-                }
+            if ((parent).kind === 'namespace' && (obj as DOMObject).kind === 'property') {
+                obj.kind = doclet.kind == 'constant' ? 'const' : 'var';
             }
         }
     }
