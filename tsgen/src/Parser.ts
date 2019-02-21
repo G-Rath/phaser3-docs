@@ -105,12 +105,11 @@ export class Parser {
                     break;
             }
 
-            if (
-                (doclet.longname.indexOf('Phaser.Physics.Arcade.Components.') == 0
-                 || doclet.longname.indexOf('Phaser.Physics.Impact.Components.') == 0
-                 || doclet.longname.indexOf('Phaser.Physics.Matter.Components.') == 0)
-                && doclet.longname.indexOf('#') == -1
-            ) {
+            if (!doclet.longname.includes('#') && [
+                'Phaser.Physics.Arcade.Components.',
+                'Phaser.Physics.Impact.Components.',
+                'Phaser.Physics.Matter.Components.'
+            ].find(value => doclet.longname.startsWith(value))) {
                 doclet.kind = 'mixin';
             }
             /////////////////////////
