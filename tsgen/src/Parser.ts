@@ -3,10 +3,12 @@ import Guard from './Guard';
 
 const regexEndLine = /^(.*)\r\n|\n|\r/gm;
 
+type DOMObject = dom.ModuleMember | dom.EnumDeclaration | dom.PropertyDeclaration;
+
 export class Parser {
 
     topLevel: dom.TopLevelDeclaration[];
-    objects: { [key: string]: dom.DeclarationBase };
+    objects: { [key: string]: DOMObject };
     namespaces: { [key: string]: dom.NamespaceDeclaration };
 
     constructor(doclets: Array<TDoclet>) {
@@ -114,45 +116,13 @@ export class Parser {
             }
             /////////////////////////
 
-            let obj: dom.DeclarationBase;
-            let container = this.objects;
-
-            switch (doclet.kind) {
-                case 'namespace':
-                    obj = this._createNamespaceDeclaration(doclet);
-                    container = this.namespaces;
-                    break;
-                case 'class':
-                    obj = this._createClassDeclaration(doclet);
-                    break;
-                case 'mixin':
-                    obj = this._createInterfaceDeclaration(doclet);
-                    break;
-                case 'member':
-                    if (doclet.isEnum === true) {
-                        obj = this._createEnumDeclaration(doclet);
-                        break;
-                    }
-                case 'constant':
-                    obj = this._createMemberDeclaration(doclet);
-                    break;
-                case 'function':
-                    obj = this._createFunctionDeclaration(doclet);
-                    break;
-                case 'typedef':
-                    obj = this._createTypedefDeclaration(doclet);
-                    break;
-                case 'event':
-                    obj = this._createEventDeclaration(doclet);
-                    break;
-                default:
-                    console.log('Ignored doclet kind: ' + doclet.kind);
-                    break;
-            }
+            const obj = this._createDeclarationForDoclet(doclet);
 
             if (!obj) {
                 continue;
             }
+
+            const container = obj.kind === 'namespace' ? this.namespaces : this.objects;
 
             if (container[doclet.longname]) {
                 console.log('Warning: ignoring duplicate doc name: ' + doclet.longname);
@@ -171,12 +141,46 @@ export class Parser {
         }
     }
 
+    /**
+     * Creates a CodeDOM declaration for the given `doclet`.
+     *
+     * @param {Readonly<TDoclet>} doclet
+     *
+     * @return {DOMObject | null}
+     * @private
+     */
+    private _createDeclarationForDoclet(doclet: Readonly<TDoclet>): DOMObject | null {
+        switch (doclet.kind) {
+            case 'namespace':
+                return this._createNamespaceDeclaration(doclet);
+            case 'class':
+                return this._createClassDeclaration(doclet);
+            case 'mixin':
+                return this._createInterfaceDeclaration(doclet);
+            case 'member':
+                if (doclet.isEnum === true) {
+                    return this._createEnumDeclaration(doclet);
+                }
+            case 'constant':
+                return this._createMemberDeclaration(doclet);
+            case 'function':
+                return this._createFunctionDeclaration(doclet);
+            case 'typedef':
+                return this._createTypedefDeclaration(doclet);
+            case 'event':
+                return this._createEventDeclaration(doclet);
+            default:
+                console.log('Ignored doclet kind: ' + doclet.kind);
+
+                return null;
+        }
+    }
+
     private _resolveDoclets(doclets: Array<TDoclet>): void {
         for (const doclet of doclets) {
             const obj = doclet.kind === 'namespace' ? this.namespaces[doclet.longname] : this.objects[doclet.longname];
 
             if (!obj) {
-
                 //  TODO
                 console.log(`Warning: Didn't find object for ${doclet.longname}`);
 
@@ -185,55 +189,59 @@ export class Parser {
 
             if (!doclet.memberof) {
                 this.topLevel.push(obj as dom.TopLevelDeclaration);
-            } else {
-                const isNamespaceMember = doclet.kind === 'class' || doclet.kind === 'typedef' || doclet.kind == 'namespace' || ('isEnum' in doclet && doclet.isEnum);
-                let parent = isNamespaceMember ? this.namespaces[doclet.memberof] : (this.objects[doclet.memberof] || this.namespaces[doclet.memberof]);
 
-                //TODO: this whole section should be removed once stable
-                if (!parent) {
-                    console.log(`${doclet.longname} in ${doclet.meta.filename}@${doclet.meta.lineno} has parent '${doclet.memberof}' that is not defined.`);
-                    const parts: string[] = doclet.memberof.split('.');
-                    const newParts = [parts.pop()];
-                    while (parts.length > 0 && this.objects[parts.join('.')] == null) newParts.unshift(parts.pop());
-                    parent = this.objects[parts.join('.')] as dom.NamespaceDeclaration;
-                    if (parent == null) {
-                        parent = dom.create.namespace(doclet.memberof);
-                        this.namespaces[doclet.memberof] = <dom.NamespaceDeclaration>parent;
-                        this.topLevel.push(<dom.NamespaceDeclaration>parent);
-                    } else {
-                        while (newParts.length > 0) {
-                            const oldParent = <dom.NamespaceDeclaration>parent;
-                            parent = dom.create.namespace(newParts.shift());
-                            parts.push((<dom.NamespaceDeclaration>parent).name);
-                            this.namespaces[parts.join('.')] = <dom.NamespaceDeclaration>parent;
-                            oldParent.members.push(<dom.NamespaceDeclaration>parent);
-                            (<any>parent)._parent = oldParent;
-                        }
-                    }
-                }
-                ///////////////////////////////////////////////////////
+                continue;
+            }
 
-                if ((<any>parent).members) {
-                    (<any>parent).members.push(obj);
+            const isNamespaceMember = doclet.kind === 'class' || doclet.kind === 'typedef' || doclet.kind == 'namespace' || ('isEnum' in doclet && doclet.isEnum);
+            let parent = isNamespaceMember
+                ? this.namespaces[doclet.memberof]
+                : (this.objects[doclet.memberof] || this.namespaces[doclet.memberof]);
+
+            //TODO: this whole section should be removed once stable
+            if (!parent) {
+                console.log(`${doclet.longname} in ${doclet.meta.filename}@${doclet.meta.lineno} has parent '${doclet.memberof}' that is not defined.`);
+                const parts: string[] = doclet.memberof.split('.');
+                const newParts = [parts.pop()];
+                while (parts.length > 0 && this.objects[parts.join('.')] == null) newParts.unshift(parts.pop());
+                parent = this.objects[parts.join('.')] as dom.NamespaceDeclaration;
+                if (parent == null) {
+                    parent = dom.create.namespace(doclet.memberof);
+                    this.namespaces[doclet.memberof] = <dom.NamespaceDeclaration>parent;
+                    this.topLevel.push(<dom.NamespaceDeclaration>parent);
                 } else {
-                    console.log('Cannot find members array for:');
-                    console.log(parent);
-                }
-
-                (<any>obj)._parent = parent;
-
-                // class/interface members have methods, not functions
-                if (((parent as any).kind === 'class' || (parent as any).kind === 'interface')
-                    && (obj as any).kind === 'function') {
-                    (obj as any).kind = 'method';
-                }
-                // namespace members are vars or consts, not properties
-                if ((parent as any).kind === 'namespace' && (obj as any).kind === 'property') {
-                    if (doclet.kind == 'constant') {
-                        (obj as any).kind = 'const';
-                    } else {
-                        (obj as any).kind = 'var';
+                    while (newParts.length > 0) {
+                        const oldParent = <dom.NamespaceDeclaration>parent;
+                        parent = dom.create.namespace(newParts.shift());
+                        parts.push((<dom.NamespaceDeclaration>parent).name);
+                        this.namespaces[parts.join('.')] = <dom.NamespaceDeclaration>parent;
+                        oldParent.members.push(<dom.NamespaceDeclaration>parent);
+                        (<any>parent)._parent = oldParent;
                     }
+                }
+            }
+            ///////////////////////////////////////////////////////
+
+            if ((<any>parent).members) {
+                (<any>parent).members.push(obj);
+            } else {
+                console.log('Cannot find members array for:');
+                console.log(parent);
+            }
+
+            (<any>obj)._parent = parent;
+
+            // class/interface members have methods, not functions
+            if ((parent.kind === 'class' || (parent as any).kind === 'interface')
+                && (obj as any).kind === 'function') {
+                (obj as any).kind = 'method';
+            }
+            // namespace members are vars or consts, not properties
+            if ((parent as any).kind === 'namespace' && (obj as any).kind === 'property') {
+                if (doclet.kind == 'constant') {
+                    (obj as any).kind = 'const';
+                } else {
+                    (obj as any).kind = 'var';
                 }
             }
         }
