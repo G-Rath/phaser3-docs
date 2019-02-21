@@ -6,10 +6,9 @@ const regexEndLine = /^(.*)\r\n|\n|\r/gm;
 type DOMObject = dom.ModuleMember | dom.EnumDeclaration | dom.PropertyDeclaration;
 
 export class Parser {
-
-    topLevel: dom.TopLevelDeclaration[];
-    objects: { [key: string]: DOMObject };
-    namespaces: { [key: string]: dom.NamespaceDeclaration };
+    topLevel: Array<dom.TopLevelDeclaration> = [];
+    objects: Record<string, DOMObject> = {};
+    namespaces: Record<string, dom.NamespaceDeclaration> = {};
 
     constructor(doclets: Array<TDoclet>) {
         // TODO remove once stable
@@ -25,10 +24,6 @@ export class Parser {
             }
         });
         //////////////////////////
-
-        this.topLevel = [];
-        this.objects = {};
-        this.namespaces = {};
 
         // parse doclets and create corresponding dom objects
         this._parseDoclets(doclets);
