@@ -484,10 +484,12 @@ export class Parser {
 
     private _parseFunctionParameters(
         doclet:
+            | IEventDoclet
             | ITypedefDoclet
             | IFunctionDoclet
             | IClassDoclet,
         obj:
+            | dom.FunctionType
             | dom.FunctionDeclaration
             | dom.ConstructorDeclaration
     ): void {
@@ -496,7 +498,7 @@ export class Parser {
         if (doclet.params) {
             let optional = false;
 
-            obj.jsDocComment = '';
+            const jsDocComment = [''];
 
             for (const paramDoc of doclet.params) {
                 // TODO REMOVE TEMP FIX
@@ -505,9 +507,9 @@ export class Parser {
 
                     const defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
                     if (paramDoc.description) {
-                        obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
+                        jsDocComment.push(`@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal);
                     } else if (defaultVal.length) {
-                        obj.jsDocComment += `\n@param ${paramDoc.name} ${defaultVal}`;
+                        jsDocComment.push(`@param ${paramDoc.name} ${defaultVal}`);
                     }
 
                     continue;
@@ -528,20 +530,24 @@ export class Parser {
 
                 const defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
 
-                const jsDocComment = [`\n@param ${paramDoc.name}`];
+                const jsDocParamComment = [`@param ${paramDoc.name}`];
 
                 if (paramDoc.description) {
-                    jsDocComment.push(paramDoc.description.replace(regexEndLine, '$1\n').trim());
+                    jsDocParamComment.push(paramDoc.description.replace(regexEndLine, '$1\n').trim());
                 }
 
                 if (defaultVal.length) {
-                    jsDocComment.push(defaultVal.trim());
+                    jsDocParamComment.push(defaultVal.trim());
                 }
 
                 // TODO: remove this *conditional* after talking to @photonstorm - currently '@params' are only added params with a description
-                if (jsDocComment.length > 1) {
-                    obj.jsDocComment += jsDocComment.join(' ');
+                if (jsDocParamComment.length > 1) {
+                    jsDocComment.push(jsDocParamComment.join(' '));
                 }
+            }
+
+            if (obj.kind !== 'function-type') {
+                obj.jsDocComment = jsDocComment.join('\n');
             }
         }
 
