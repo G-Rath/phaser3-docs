@@ -220,8 +220,8 @@ export class Parser {
             }
             ///////////////////////////////////////////////////////
 
-            if ((<any>parent).members) {
-                (<any>parent).members.push(obj);
+            if ('members' in parent && parent.members) {
+                (parent.members as Array<DOMObject>).push(obj);
             } else {
                 console.log('Cannot find members array for:');
                 console.log(parent);
