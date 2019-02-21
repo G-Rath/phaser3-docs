@@ -528,10 +528,19 @@ export class Parser {
 
                 const defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
 
+                const jsDocComment = [`\n@param ${paramDoc.name}`];
+
                 if (paramDoc.description) {
-                    obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
-                } else if (defaultVal.length) {
-                    obj.jsDocComment += `\n@param ${paramDoc.name} ${defaultVal}`;
+                    jsDocComment.push(paramDoc.description.replace(regexEndLine, '$1\n').trim());
+                }
+
+                if (defaultVal.length) {
+                    jsDocComment.push(defaultVal.trim());
+                }
+
+                // TODO: remove this *conditional* after talking to @photonstorm - currently '@params' are only added params with a description
+                if (jsDocComment.length > 1) {
+                    obj.jsDocComment += jsDocComment.join(' ');
                 }
             }
         }
