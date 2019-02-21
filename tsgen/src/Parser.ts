@@ -12,7 +12,7 @@ export class Parser {
     constructor(doclets: Array<TDoclet>) {
         // TODO remove once stable
         for (let i = 0; i < doclets.length; i++) {
-            let doclet = doclets[i];
+            const doclet = doclets[i];
 
             if (doclet.longname && doclet.longname.indexOf('{') === 0) {
                 doclet.longname = doclet.longname.substr(1);
@@ -51,8 +51,8 @@ export class Parser {
     }
 
     emit() {
-        let ignored = [];
-        let result = this.topLevel.reduce((out: string, obj: dom.TopLevelDeclaration) => {
+        const ignored = [];
+        const result = this.topLevel.reduce((out: string, obj: dom.TopLevelDeclaration) => {
             // TODO: remove once stable
             if (<string>obj.kind === 'property') {
                 ignored.push((<any>obj).name);
@@ -70,8 +70,7 @@ export class Parser {
 
     private _parseDoclets(doclets: Array<TDoclet>): void {
         for (let i = 0; i < doclets.length; i++) {
-
-            let doclet = doclets[i];
+            const doclet = doclets[i];
 
             // if (doclet.kind === 'namespace')
             // {
@@ -156,7 +155,7 @@ export class Parser {
                 }
                 container[doclet.longname] = obj;
                 if (doclet.description) {
-                    let otherDocs = obj.jsDocComment || '';
+                    const otherDocs = obj.jsDocComment || '';
                     obj.jsDocComment = doclet.description.replace(regexEndLine, '$1\n') + otherDocs;
                 }
             }
@@ -164,9 +163,9 @@ export class Parser {
     }
 
     private _resolveDoclets(doclets: Array<TDoclet>): void {
-        let allTypes = new Set<string>();
-        for (let doclet of doclets) {
-            let obj = doclet.kind === 'namespace' ? this.namespaces[doclet.longname] : this.objects[doclet.longname];
+        const allTypes = new Set<string>();
+        for (const doclet of doclets) {
+            const obj = doclet.kind === 'namespace' ? this.namespaces[doclet.longname] : this.objects[doclet.longname];
 
             if (!obj) {
 
@@ -179,14 +178,14 @@ export class Parser {
             if (!doclet.memberof) {
                 this.topLevel.push(obj as dom.TopLevelDeclaration);
             } else {
-                let isNamespaceMember = doclet.kind === 'class' || doclet.kind === 'typedef' || doclet.kind == 'namespace' || ('isEnum' in doclet && doclet.isEnum);
+                const isNamespaceMember = doclet.kind === 'class' || doclet.kind === 'typedef' || doclet.kind == 'namespace' || ('isEnum' in doclet && doclet.isEnum);
                 let parent = isNamespaceMember ? this.namespaces[doclet.memberof] : (this.objects[doclet.memberof] || this.namespaces[doclet.memberof]);
 
                 //TODO: this whole section should be removed once stable
                 if (!parent) {
                     console.log(`${doclet.longname} in ${doclet.meta.filename}@${doclet.meta.lineno} has parent '${doclet.memberof}' that is not defined.`);
-                    let parts: string[] = doclet.memberof.split('.');
-                    let newParts = [parts.pop()];
+                    const parts: string[] = doclet.memberof.split('.');
+                    const newParts = [parts.pop()];
                     while (parts.length > 0 && this.objects[parts.join('.')] == null) newParts.unshift(parts.pop());
                     parent = this.objects[parts.join('.')] as dom.NamespaceDeclaration;
                     if (parent == null) {
@@ -195,7 +194,7 @@ export class Parser {
                         this.topLevel.push(<dom.NamespaceDeclaration>parent);
                     } else {
                         while (newParts.length > 0) {
-                            let oldParent = <dom.NamespaceDeclaration>parent;
+                            const oldParent = <dom.NamespaceDeclaration>parent;
                             parent = dom.create.namespace(newParts.shift());
                             parts.push((<dom.NamespaceDeclaration>parent).name);
                             this.namespaces[parts.join('.')] = <dom.NamespaceDeclaration>parent;
@@ -229,8 +228,8 @@ export class Parser {
     }
 
     private _resolveInheritance(doclets: Array<TDoclet>): void {
-        for (let doclet of doclets) {
-            let obj = doclet.kind === 'namespace' ? this.namespaces[doclet.longname] : this.objects[doclet.longname];
+        for (const doclet of doclets) {
+            const obj = doclet.kind === 'namespace' ? this.namespaces[doclet.longname] : this.objects[doclet.longname];
             if (!obj) {
 
                 //  TODO
@@ -241,7 +240,7 @@ export class Parser {
             if (!(<any>obj)._parent) continue;
 
             if (doclet.inherited) {// remove inherited members if they aren't from an interface
-                let from = this.objects[doclet.inherits];
+                const from = this.objects[doclet.inherits];
                 if (!from || !(<any>from)._parent)
                     throw `'${doclet.longname}' should inherit from '${doclet.inherits}', which is not defined.`;
 
@@ -254,20 +253,20 @@ export class Parser {
     }
 
     private _resolveParents(doclets: Array<TDoclet>): void {
-        for (let doclet of doclets) {
-            let obj = this.objects[doclet.longname];
+        for (const doclet of doclets) {
+            const obj = this.objects[doclet.longname];
             if (!obj || doclet.kind !== 'class') continue;
 
-            let o = obj as dom.ClassDeclaration;
+            const o = obj as dom.ClassDeclaration;
 
             // resolve augments
             if (doclet.augments && doclet.augments.length) {
-                for (let augment of doclet.augments) {
-                    let name: string = this._prepareTypeName(augment);
+                for (const augment of doclet.augments) {
+                    const name: string = this._prepareTypeName(augment);
 
-                    let wrappingName = name.match(/[^<]+/s)[0];//gets everything up to a first < (to handle augments with type parameters)
+                    const wrappingName = name.match(/[^<]+/s)[0];//gets everything up to a first < (to handle augments with type parameters)
 
-                    let baseType = this.objects[wrappingName] as dom.ClassDeclaration | dom.InterfaceDeclaration;
+                    const baseType = this.objects[wrappingName] as dom.ClassDeclaration | dom.InterfaceDeclaration;
 
                     if (!baseType) {
                         console.log(`ERROR: Did not find base type: ${augment} for ${doclet.longname}`);
@@ -304,17 +303,17 @@ export class Parser {
 
             // console.log('namespace:', doclet.longname);
 
-        let obj = dom.create.namespace(doclet.name);
+        const obj = dom.create.namespace(doclet.name);
 
         return obj;
     }
 
     private _createClassDeclaration(doclet: IClassDoclet): dom.ClassDeclaration {
-        let obj = dom.create.class(doclet.name);
+        const obj = dom.create.class(doclet.name);
 
         let params = null;
         if (doclet.params) {
-            let ctor = dom.create.constructor(null);
+            const ctor = dom.create.constructor(null);
             this._parseFunctionParameters(doclet, ctor);
             params = ctor.parameters;
 
@@ -335,12 +334,11 @@ export class Parser {
     }
 
     private _createMemberDeclaration(doclet: IMemberDoclet): dom.PropertyDeclaration {
-        let type = this._determineDOMType(doclet);
+        const type = this._determineDOMType(doclet);
 
-        let obj = dom.create.property(doclet.name, type);
+        const obj = dom.create.property(doclet.name, type);
 
         this._processGeneric(doclet, obj, null);
-
         this._processFlags(doclet, obj);
 
         return obj;
@@ -354,9 +352,9 @@ export class Parser {
      * @return {PropertyDeclaration}
      */
     private _createPropertyDeclaration(doclet: IDocletProp): dom.PropertyDeclaration {
-        let type = this._determineDOMType(doclet);
+        const type = this._determineDOMType(doclet);
 
-        let obj = dom.create.property(doclet.name, type);
+        const obj = dom.create.property(doclet.name, type);
 
         this._processFlags(doclet, obj);
 
@@ -366,9 +364,9 @@ export class Parser {
     private _createEventDeclaration(doclet: IEventDoclet): dom.ConstDeclaration {
         // this could all be "somewhat wrong", and subject to change
         // TODO: this should return an "event" function
-        let type = dom.type.any;
+        const type = dom.type.any;
 
-        let obj = dom.create.const(doclet.name, type);
+        const obj = dom.create.const(doclet.name, type);
 
         this._processFlags(doclet, obj);
 
@@ -376,7 +374,7 @@ export class Parser {
     }
 
     private _createEnumDeclaration(doclet: IMemberDoclet): dom.EnumDeclaration {
-        let obj = dom.create.enum(doclet.name, false);
+        const obj = dom.create.enum(doclet.name, false);
 
         this._processFlags(doclet, obj);
 
@@ -384,17 +382,15 @@ export class Parser {
     }
 
     private _createFunctionDeclaration(doclet: IFunctionDoclet): dom.FunctionDeclaration {
-        let returnType: dom.Type = dom.type.void;
+        const returnType: dom.Type = doclet.returns
+            ? this._determineDOMType(doclet.returns[0])
+            : dom.type.void;
 
-        if (doclet.returns) {
-            returnType = this._determineDOMType(doclet.returns[0]);
-        }
+        const obj = dom.create.function(doclet.name, null, returnType);
 
-        let obj = dom.create.function(doclet.name, null, returnType);
         this._parseFunctionParameters(doclet, obj);
 
         this._processGeneric(doclet, obj, obj.parameters);
-
         this._processFlags(doclet, obj);
 
         return obj;
@@ -406,10 +402,10 @@ export class Parser {
 
         // TODO: this doesn't support 'Object', which is typically what should be used.
         if (doclet.type.names[0] === 'object') {
-            let properties = [];
+            const properties = [];
 
-            for (let propDoc of doclet.properties) {
-                let prop = this._createPropertyDeclaration(propDoc);
+            for (const propDoc of doclet.properties) {
+                const prop = this._createPropertyDeclaration(propDoc);
                 properties.push(prop);
                 if (propDoc.description)
                     prop.jsDocComment = propDoc.description.replace(regexEndLine, '$1\n');
@@ -418,7 +414,7 @@ export class Parser {
             type = dom.create.objectType(properties);
 
             if (doclet.augments && doclet.augments.length) {
-                let intersectionTypes = [];
+                const intersectionTypes = [];
                 for (let i = 0; i < doclet.augments.length; i++) {
                     intersectionTypes.push(dom.create.namedTypeReference(doclet.augments[i]));
                 }
@@ -431,7 +427,7 @@ export class Parser {
             this._parseFunctionParameters(doclet, type);
         }
 
-        let alias = dom.create.alias(doclet.name, type);
+        const alias = dom.create.alias(doclet.name, type);
 
         this._processGeneric(doclet, alias, null);
 
@@ -447,7 +443,7 @@ export class Parser {
             | dom.FunctionDeclaration
             | dom.ConstructorDeclaration
     ): void {
-        let parameters: dom.Parameter[] = [];
+        const parameters: dom.Parameter[] = [];
 
         if (doclet.params) {
 
@@ -455,13 +451,13 @@ export class Parser {
 
             obj.jsDocComment = '';
 
-            for (let paramDoc of doclet.params) {
+            for (const paramDoc of doclet.params) {
 
                 // TODO REMOVE TEMP FIX
                 if (paramDoc.name.indexOf('.') != -1) {
                     console.log(`Warning: ignoring param with '.' for '${doclet.longname}' in ${doclet.meta.filename}@${doclet.meta.lineno}`);
 
-                    let defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
+                    const defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
                     if (paramDoc.description)
                         obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
                     else if (defaultVal.length)
@@ -470,7 +466,7 @@ export class Parser {
                 }
                 ///////////////////////
 
-                let param = dom.create.parameter(paramDoc.name, this._determineDOMType(paramDoc));
+                const param = dom.create.parameter(paramDoc.name, this._determineDOMType(paramDoc));
                 parameters.push(param);
 
                 if (optional && paramDoc.optional != true) {
@@ -482,7 +478,7 @@ export class Parser {
 
                 optional = optional || paramDoc.optional === true;
 
-                let defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
+                const defaultVal = paramDoc.defaultvalue !== undefined ? ` Default ${String(paramDoc.defaultvalue)}.` : '';
 
                 if (paramDoc.description)
                     obj.jsDocComment += `\n@param ${paramDoc.name} ${paramDoc.description.replace(regexEndLine, '$1\n')}` + defaultVal;
@@ -560,17 +556,17 @@ export class Parser {
         if (name === 'array') return 'any[]';
 
         if (name.startsWith('Array<')) {
-            let matches = name.match(/^Array<(.*)>$/);
+            const matches = name.match(/^Array<(.*)>$/);
 
             if (matches && matches[1]) {
                 return this._processTypeName(matches[1]) + '[]';
             }
         } else if (name.startsWith('Object<')) {
-            let matches = name.match(/^Object<(.*)>$/);
+            const matches = name.match(/^Object<(.*)>$/);
 
             if (matches && matches[1]) {
                 if (matches[1].indexOf(',') != -1) {
-                    let parts = matches[1].split(',');
+                    const parts = matches[1].split(',');
                     return `{[key: ${this._processTypeName(parts[0])}]: ${this._processTypeName(parts[1])}}`;
                 } else {
                     return `{[key: string]: ${this._processTypeName(matches[1])}}`;
@@ -740,10 +736,10 @@ export class Parser {
         parameters: dom.Parameter[]
     ): void {
         if (doclet.tags)
-            for (let tag of doclet.tags) {
+            for (const tag of doclet.tags) {
                 if (tag.originalTitle === 'generic') {
-                    let matches = tag.value.match(/(?:(?:{)([^}]+)(?:}))?\s?([^\s]+)(?:\s?-\s?(?:\[)(.+)(?:\]))?/);
-                    let typeParam = dom.create.typeParameter(matches[2], matches[1] == null ? null : dom.create.typeParameter(matches[1]));
+                    const matches = tag.value.match(/(?:(?:{)([^}]+)(?:}))?\s?([^\s]+)(?:\s?-\s?(?:\[)(.+)(?:\]))?/);
+                    const typeParam = dom.create.typeParameter(matches[2], matches[1] == null ? null : dom.create.typeParameter(matches[1]));
 
                     if (declaration.kind !== 'property') {
                         declaration.typeParameters.push(typeParam);
@@ -751,8 +747,8 @@ export class Parser {
 
                     handleOverrides(matches[3], matches[2]);
                 } else if (tag.originalTitle === 'genericUse') {
-                    let matches = tag.value.match(/(?:(?:{)([^}]+)(?:}))(?:\s?-\s?(?:\[)(.+)(?:\]))?/);
-                    let overrideType: string = this._prepareTypeName(matches[1]);
+                    const matches = tag.value.match(/(?:(?:{)([^}]+)(?:}))(?:\s?-\s?(?:\[)(.+)(?:\]))?/);
+                    const overrideType: string = this._prepareTypeName(matches[1]);
 
                     handleOverrides(matches[2], this._processTypeName(overrideType));
                 }
@@ -760,9 +756,9 @@ export class Parser {
 
         function handleOverrides(matchedString: string, overrideType: string) {
             if (matchedString != null) {
-                let overrides = matchedString.split(',');
+                const overrides = matchedString.split(',');
                 if (parameters != null) {
-                    for (let parameter of parameters) {
+                    for (const parameter of parameters) {
                         if (overrides.indexOf(parameter.name) != -1) {
                             parameter.type = dom.create.namedTypeReference(overrideType);
                         }
